@@ -7,7 +7,27 @@
 		<script type="text/javascript">
 			$(document).ready(function() {
 				$('#nameForm .submit').click(function() {
-					$('#nameList ul').prepend("<li>"+$('#name').val()+"</li>");
+					var name = $('#name').val();
+					var data = {
+						name:name
+					};
+					var callback = function(data) {
+						if(data.contains("added successfully")) {
+							$('#nameList .ajax').remove();
+							$('#nameList ul').prepend("<li>"+name+"</li>");
+						} else {
+							$('#nameList .ajax').addClass('error').html(name+' not saved on server! Try again.</div>');
+						}
+					};
+					$('#nameList').prepend('<div class="ajax">Sending...</div>');
+					if(
+						window.Components &&
+						window.netscape &&
+						window.netscape.security &&
+						document.location.protocol.indexOf("http") == -1) {
+					window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+					}
+					$.post("http://contributively.appjet.net",data,callback,"html");
 					return false;
 				});
 			});

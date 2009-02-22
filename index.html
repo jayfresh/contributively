@@ -41,12 +41,12 @@
 							name:name,
 							position:1
 						});
-						$('#nameList ul').prepend("<li>"+name+"</li>");
+						addNameToList();
 					}
 				};
 				$('#nameForm .submit').click(function() {
 					var name = $('#name').val();
-					saveToStore(name,true);
+					saveToStore(name);
 					return false;
 				});
 			});
@@ -62,12 +62,38 @@
 				</form>
 			</div>
 			<div id="nameList">
-				<ul>
-					<li>JONATHAN LISTER</li>
-					<li>MADHU KAMBERMETHU</li>
-					<li>JAMES</li>
-					<li>DEAN</li>
-				</ul>
+				<table>
+					<tr>
+						<td>JONATHAN LISTER</td>
+					</tr>
+					<tr>
+						<td><input type="text" /></td>
+					</tr>
+					<tr>
+						<td><input type="text" /></td>
+					</tr>
+					<tr>
+						<td>MADHU KHAMBERMEHTU</td>
+					</tr>
+					<tr>
+						<td><input type="text" /></td>
+					</tr>
+					<tr>
+						<td><input type="text" /></td>
+					</tr>
+					<tr>
+						<td>JAMES</td>
+					</tr>
+					<tr>
+						<td><input type="text" /></td>
+					</tr>
+					<tr>
+						<td><input type="text" /></td>
+					</tr>
+					<tr>
+						<td>DEAN</td>
+					</tr>
+				</table>
 			</div>
 		</div>
 	</body>

@@ -9,7 +9,12 @@
 			$(document).ready(function() {
 				var saveToStore = function(name,live) {
 					var addNameToList = function() {
-						$('#nameList ul').prepend("<li>"+name+"</li>");
+						var table = $('#nameList table');
+						var htmlString = '<tr><td>'+name+'</td></tr>';
+						if(table.children().length!==0) {
+							htmlString += '<tr><td><input type="text" /></td></tr><tr><td><input type="text" /></td></tr>';
+						}
+						table.prepend(htmlString);
 					};
 					if(live) {
 						var data = {
@@ -62,38 +67,7 @@
 				</form>
 			</div>
 			<div id="nameList">
-				<table>
-					<tr>
-						<td>JONATHAN LISTER</td>
-					</tr>
-					<tr>
-						<td><input type="text" /></td>
-					</tr>
-					<tr>
-						<td><input type="text" /></td>
-					</tr>
-					<tr>
-						<td>MADHU KHAMBERMEHTU</td>
-					</tr>
-					<tr>
-						<td><input type="text" /></td>
-					</tr>
-					<tr>
-						<td><input type="text" /></td>
-					</tr>
-					<tr>
-						<td>JAMES</td>
-					</tr>
-					<tr>
-						<td><input type="text" /></td>
-					</tr>
-					<tr>
-						<td><input type="text" /></td>
-					</tr>
-					<tr>
-						<td>DEAN</td>
-					</tr>
-				</table>
+				<table></table>
 			</div>
 		</div>
 	</body>

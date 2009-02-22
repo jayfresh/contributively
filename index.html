@@ -4,14 +4,22 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<title>Contributively - peer-reviewed contributions to projects</title>
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				$('#nameForm .submit').click(function() {
+					$('#nameList ul').prepend("<li>"+$('#name').val()+"</li>");
+					return false;
+				});
+			});
+		</script>
 	</head>
 	<body>
 		<div id="container">
 			<div id="nameForm">
-				<form method="POST">
+				<form action="/">
 					<label for="name">Add name</label>
 					<input id="name" type="text"></input>
-					<input type="submit" value="Add"></input>
+					<input type="submit" class="submit" value="Add"></input>
 				</form>
 			</div>
 			<div id="nameList">

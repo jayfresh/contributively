@@ -5,29 +5,48 @@
 		<title>Contributively - peer-reviewed contributions to projects</title>
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.1/jquery.min.js"></script>
 		<script type="text/javascript">
+			var store = [];
 			$(document).ready(function() {
+				var saveToStore = function(name,live) {
+					var addNameToList = function() {
+						$('#nameList ul').prepend("<li>"+name+"</li>");
+					};
+					if(live) {
+						var data = {
+							name:name
+						};
+						var callback = function(data) {
+							if(data.indexOf("added successfully")!==-1) {
+								$('#nameList .ajax').remove();
+								addNameToList();
+							} else {
+								$('#nameList .ajax').addClass('error').html(name+' not saved on server! Try again.</div>');
+							}
+						};
+						$('#nameList').prepend('<div class="ajax">Sending...</div>');
+						if(
+							window.Components &&
+							window.netscape &&
+							window.netscape.security &&
+							document.location.protocol.indexOf("http") == -1) {
+						window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+						}
+						$.post("http://contributively.appjet.net",data,callback,"html");
+					} else {
+						// mimicing behaviour in contributively.appjet.net
+						for(var i=0;i<store.length;i++) {
+							store[i].position++;
+						}
+						store.push({
+							name:name,
+							position:1
+						});
+						$('#nameList ul').prepend("<li>"+name+"</li>");
+					}
+				};
 				$('#nameForm .submit').click(function() {
 					var name = $('#name').val();
-					var data = {
-						name:name
-					};
-					var callback = function(data) {
-						if(data.contains("added successfully")) {
-							$('#nameList .ajax').remove();
-							$('#nameList ul').prepend("<li>"+name+"</li>");
-						} else {
-							$('#nameList .ajax').addClass('error').html(name+' not saved on server! Try again.</div>');
-						}
-					};
-					$('#nameList').prepend('<div class="ajax">Sending...</div>');
-					if(
-						window.Components &&
-						window.netscape &&
-						window.netscape.security &&
-						document.location.protocol.indexOf("http") == -1) {
-					window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-					}
-					$.post("http://contributively.appjet.net",data,callback,"html");
+					saveToStore(name,true);
 					return false;
 				});
 			});

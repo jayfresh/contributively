@@ -7,7 +7,33 @@
 		<script type="text/javascript">
 			var store = [];
 			$(document).ready(function() {
-				var addNameToList = function(name) {
+				var saveToStore = function(data,successCallback,offlineFunc) {
+					successCallback = typeof successCallback === 'function' ? successCallback : function() {};
+					if(typeof offlineFunc === 'function') {
+						offlineFunc();
+						successCallback();
+					} else {
+						var callback = function(response) {
+							if(response.indexOf("added successfully")!==-1) { // this is from appjet
+								$('#nameList .ajax').remove();
+								successCallback();
+							} else {
+								$('#nameList .ajax').addClass('error').html('Not saved to server! Try again.</div>');
+							}
+						};
+						$('#nameList').prepend('<div class="ajax">Saving...</div>');
+						if(
+							window.Components &&
+							window.netscape &&
+							window.netscape.security &&
+							document.location.protocol.indexOf("http") == -1) {
+						window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+						}
+						$.post("http://contributively.appjet.net",data,callback,"html");
+					}
+				};
+				$('#nameForm .submit').click(function() {
+					var name = $('#name').val();
 					var addToTable = function() {
 						var table = $('#nameList table');
 						var htmlString = '<tr><td>'+name+'</td></tr>';
@@ -17,57 +43,49 @@
 						}
 						table.prepend(htmlString);
 					};
-					var saveToStore = function(successCallback,live) {
-						if(live) {
-							var data = {
-								name:name
-							};
-							var callback = function(data) {
-								if(data.indexOf("added successfully")!==-1) {
-									$('#nameList .ajax').remove();
-									successCallback();
-								} else {
-									$('#nameList .ajax').addClass('error').html(name+' not saved on server! Try again.</div>');
-								}
-							};
-							$('#nameList').prepend('<div class="ajax">Sending...</div>');
-							if(
-								window.Components &&
-								window.netscape &&
-								window.netscape.security &&
-								document.location.protocol.indexOf("http") == -1) {
-							window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-							}
-							$.post("http://contributively.appjet.net",data,callback,"html");
-						} else {
-							// mimicing behaviour in contributively.appjet.net
-							for(var i=0;i<store.length;i++) {
-								store[i].position++;
-							}
-							store.push({
-								name:name,
-								position:1
-							});
-							successCallback();
-						}
+					var data = {
+						name:name
 					};
-					saveToStore(addToTable);
-				};
-				$('#nameForm .submit').click(function() {
-					var name = $('#name').val();
-					addNameToList(name);
+					saveToStore(data,addToTable,function() {
+						// mimicing behaviour in contributively.appjet.net
+						store.push({
+							name:data.name,
+							position:store.length+1
+						});
+					});
 					return false;
 				});
 				$('#nameList').change(function(ev) {
 					var target = ev.target;
 					var id = parseInt(target.id,10);
+					var partnerInputId = id%2===0 ? id-1 : id+1;
+					var position = Math.floor(id/2)+1;
+					var partnerPosition = Math.floor(partnerInputId/2)+1;
+					console.log('id',id,'partnerInputId',partnerInputId);
+					console.log('position',position,'partnerPosition',partnerPosition);
 					var amount = target.value;
-					// check to see its only digits and less than or equal to 100
-					if(amount.match(/^\d+$/) && amount <= 100) {
-						var partnerId = id%2===0 ? id-1 : id+1;
-						var partner = $('#'+partnerId);
-						partner.val(100-amount);
-					}
+					var updateInput = function() {
+						// check to see its only digits and less than or equal to 100
+						if(amount.match(/^\d+$/) && amount <= 100) {
+							var partnerInput = $('#'+partnerInputId);
+							partnerInput.val(100-amount);
+						}
+						console.log(store);
+					};
+					var data = {
+						position:position,
+						amount:amount,
+						partnerPosition:partnerPosition
+					};
+					saveToStore(data,updateInput,function() {
+						for(var i=0;i<store.length;i++) {
+							if(store[i].position===position) {
+								store[i]['amountWith'+partnerPosition] = amount;
+							} else if(store[i].position===partnerPosition) {
+								store[i]['amountWith'+position] = 100-amount;
+							}
+						}
+					});
 				});
 			});
 		</script>

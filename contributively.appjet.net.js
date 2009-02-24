@@ -8,12 +8,9 @@ if (!storage.names) {
 function post_main() {
     var name = request.params.name;
     if(name) {
-        storage.names.forEach(function(item) {
-            item.position++;
-        });
         storage.names.add({
             name:name,
-            position:1
+            position:storage.names.size()+1;
         });
         response.write(name+' added successfully');
     } else {

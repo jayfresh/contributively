@@ -7,8 +7,8 @@
 		<script type="text/javascript">
 			var store = [];
 			$(document).ready(function() {
-				var saveToStore = function(name,live) {
-					var addNameToList = function() {
+				var addNameToList = function(name) {
+					var addToTable = function() {
 						var table = $('#nameList table');
 						var htmlString = '<tr><td>'+name+'</td></tr>';
 						if(table.children().length!==0) {
@@ -16,42 +16,45 @@
 						}
 						table.prepend(htmlString);
 					};
-					if(live) {
-						var data = {
-							name:name
-						};
-						var callback = function(data) {
-							if(data.indexOf("added successfully")!==-1) {
-								$('#nameList .ajax').remove();
-								addNameToList();
-							} else {
-								$('#nameList .ajax').addClass('error').html(name+' not saved on server! Try again.</div>');
+					var saveToStore = function(successCallback,live) {
+						if(live) {
+							var data = {
+								name:name
+							};
+							var callback = function(data) {
+								if(data.indexOf("added successfully")!==-1) {
+									$('#nameList .ajax').remove();
+									successCallback();
+								} else {
+									$('#nameList .ajax').addClass('error').html(name+' not saved on server! Try again.</div>');
+								}
+							};
+							$('#nameList').prepend('<div class="ajax">Sending...</div>');
+							if(
+								window.Components &&
+								window.netscape &&
+								window.netscape.security &&
+								document.location.protocol.indexOf("http") == -1) {
+							window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
 							}
-						};
-						$('#nameList').prepend('<div class="ajax">Sending...</div>');
-						if(
-							window.Components &&
-							window.netscape &&
-							window.netscape.security &&
-							document.location.protocol.indexOf("http") == -1) {
-						window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+							$.post("http://contributively.appjet.net",data,callback,"html");
+						} else {
+							// mimicing behaviour in contributively.appjet.net
+							for(var i=0;i<store.length;i++) {
+								store[i].position++;
+							}
+							store.push({
+								name:name,
+								position:1
+							});
+							successCallback();
 						}
-						$.post("http://contributively.appjet.net",data,callback,"html");
-					} else {
-						// mimicing behaviour in contributively.appjet.net
-						for(var i=0;i<store.length;i++) {
-							store[i].position++;
-						}
-						store.push({
-							name:name,
-							position:1
-						});
-						addNameToList();
-					}
+					};
+					saveToStore(addToTable);
 				};
 				$('#nameForm .submit').click(function() {
 					var name = $('#name').val();
-					saveToStore(name);
+					addNameToList(name);
 					return false;
 				});
 			});

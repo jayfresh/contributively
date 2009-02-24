@@ -35,11 +35,11 @@
 				$('#nameForm .submit').click(function() {
 					var name = $('#name').val();
 					var addToTable = function() {
-						var table = $('#nameList table');
-						var htmlString = '<tr><td>'+name+'</td></tr>';
+						var table = $('#nameList tbody');
+						var htmlString = '<tr><td>'+name+'</td><td></td></tr>';
 						if(table.children().length!==0) {
 							var id = $('#nameList input').length+1;
-							htmlString += '<tr><td><input type="text" id="'+(id+1)+'" /></td></tr><tr><td><input type="text" id="'+id+'" /></td></tr>';
+							htmlString += '<tr><td><input type="text" id="'+(id+1)+'" /></td><td></td></tr><tr><td><input type="text" id="'+id+'" /></td><td></td></tr>';
 						}
 						table.prepend(htmlString);
 					};
@@ -70,7 +70,6 @@
 							var partnerInput = $('#'+partnerInputId);
 							partnerInput.val(100-amount);
 						}
-						console.log(store);
 					};
 					var data = {
 						position:position,
@@ -100,7 +99,15 @@
 				</form>
 			</div>
 			<div id="nameList">
-				<table></table>
+				<table border="1">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Totals</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
 			</div>
 		</div>
 	</body>

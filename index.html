@@ -6,38 +6,68 @@
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.1/jquery.min.js"></script>
 		<script type="text/javascript">
 			var store = [];
-			$(document).ready(function() {
-				var saveToStore = function(data,successCallback,offlineFunc) {
-					successCallback = typeof successCallback === 'function' ? successCallback : function() {};
-					if(typeof offlineFunc === 'function') {
-						offlineFunc();
-						successCallback();
-					} else {
-						var callback = function(response) {
-							if(response.indexOf("added successfully")!==-1) { // this is from appjet
-								$('#nameList .ajax').remove();
-								successCallback();
-							} else {
-								$('#nameList .ajax').addClass('error').html('Not saved to server! Try again.</div>');
-							}
-						};
-						$('#nameList').prepend('<div class="ajax">Saving...</div>');
-						if(
-							window.Components &&
-							window.netscape &&
-							window.netscape.security &&
-							document.location.protocol.indexOf("http") == -1) {
-						window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+			var calculateTotalsFromStore = function() {
+				var person = store[0];
+				var previousPerson;
+				var ratio;
+				var j;
+				var unNormalisedTotal;
+				// make everything relative to first person
+				var total = person['amountWith2'];
+				person.unNormalisedTotal = total;
+				for(var i=1;i<store.length;i++) {
+					// only runs once there are two or more people
+					previousPerson = person;
+					// should probably check that all browsers make array[0] the
+					// first element pushed in
+					person = store[i];
+					ratio = person['amountWith'+previousPerson.position] / previousPerson['amountWith'+person.position];
+					unNormalisedTotal = previousPerson.unNormalisedTotal * ratio;
+					person.unNormalisedTotal = unNormalisedTotal;
+					total += unNormalisedTotal;
+				}
+				var normalisedTotal;
+				for(var i=0;i<store.length;i++) {
+					person = store[i];
+					normalisedTotal = person.unNormalisedTotal / total;
+					person.normalisedTotal = normalisedTotal;
+					$('#total'+person.position).html(normalisedTotal);
+				}
+			};
+			var saveToStore = function(data,successCallback,offlineFunc) {
+				successCallback = typeof successCallback === 'function' ? successCallback : function() {};
+				if(typeof offlineFunc === 'function') {
+					offlineFunc();
+					successCallback();
+				} else {
+					var callback = function(response) {
+						if(response.indexOf("added successfully")!==-1) { // this is from appjet
+							$('#nameList .ajax').remove();
+							successCallback();
+						} else {
+							$('#nameList .ajax').addClass('error').html('Not saved to server! Try again.</div>');
 						}
-						$.post("http://contributively.appjet.net",data,callback,"html");
+					};
+					$('#nameList').prepend('<div class="ajax">Saving...</div>');
+					// handle viewing over local file:/// uri
+					if(
+						window.Components &&
+						window.netscape &&
+						window.netscape.security &&
+						document.location.protocol.indexOf("http") == -1) {
+					window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
 					}
-				};
+					$.post("http://contributively.appjet.net",data,callback,"html");
+				}
+			};
+			$(document).ready(function() {
 				$('#nameForm .submit').click(function() {
 					var name = $('#name').val();
 					var addToTable = function() {
 						var table = $('#nameList tbody');
-						var htmlString = '<tr><td>'+name+'</td><td></td></tr>';
-						if(table.children().length!==0) {
+						var people = $('#nameList tbody tr.person').length;
+						var htmlString = '<tr class="person"><td>'+name+'</td><td id="total'+(people+1)+'"></td></tr>';
+						if(people!==0) {
 							var id = $('#nameList input').length+1;
 							htmlString += '<tr><td><input type="text" id="'+(id+1)+'" /></td><td></td></tr><tr><td><input type="text" id="'+id+'" /></td><td></td></tr>';
 						}
@@ -61,8 +91,6 @@
 					var partnerInputId = id%2===0 ? id-1 : id+1;
 					var position = Math.floor(id/2)+1;
 					var partnerPosition = Math.floor(partnerInputId/2)+1;
-					console.log('id',id,'partnerInputId',partnerInputId);
-					console.log('position',position,'partnerPosition',partnerPosition);
 					var amount = target.value;
 					var updateInput = function() {
 						// check to see its only digits and less than or equal to 100
@@ -85,6 +113,9 @@
 							}
 						}
 					});
+					if(store.length>=2) {
+						calculateTotalsFromStore();
+					}
 				});
 			});
 		</script>

@@ -12,7 +12,8 @@
 						var table = $('#nameList table');
 						var htmlString = '<tr><td>'+name+'</td></tr>';
 						if(table.children().length!==0) {
-							htmlString += '<tr><td><input type="text" /></td></tr><tr><td><input type="text" /></td></tr>';
+							var id = $('#nameList input').length+1;
+							htmlString += '<tr><td><input type="text" id="'+(id+1)+'" /></td></tr><tr><td><input type="text" id="'+id+'" /></td></tr>';
 						}
 						table.prepend(htmlString);
 					};
@@ -56,6 +57,17 @@
 					var name = $('#name').val();
 					addNameToList(name);
 					return false;
+				});
+				$('#nameList').change(function(ev) {
+					var target = ev.target;
+					var id = parseInt(target.id,10);
+					var amount = target.value;
+					// check to see its only digits and less than or equal to 100
+					if(amount.match(/^\d+$/) && amount <= 100) {
+						var partnerId = id%2===0 ? id-1 : id+1;
+						var partner = $('#'+partnerId);
+						partner.val(100-amount);
+					}
 				});
 			});
 		</script>

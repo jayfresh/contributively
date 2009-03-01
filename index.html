@@ -4,6 +4,25 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<title>Contributively - peer-reviewed contributions to projects</title>
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.1/jquery.min.js"></script>
+		<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+	    <script type="text/javascript">
+	      google.load("visualization", "1", {packages:["piechart"]});
+	      google.setOnLoadCallback(drawChart);
+	      function drawChart() {
+	        var data = new google.visualization.DataTable();
+	        data.addColumn('string', 'Contribution');
+	        data.addColumn('number', 'Percentage');
+	        data.addRows(5);
+	        data.setValue(0, 0, 'Jon');
+	        data.setValue(0, 1, 11);
+	        data.setValue(1, 0, 'Josh');
+	        data.setValue(1, 1, 2);
+	        data.setValue(2, 0, 'Dan');
+	
+	        var chart = new google.visualization.PieChart(document.getElementById('pieChart'));
+	        chart.draw(data, {width: 400, height: 240, is3D: true, title: 'Contributions'});
+	      }
+	    </script>
 		<script type="text/javascript">
 			var store = [];
 			var calculateTotalsFromStore = function() {
@@ -33,37 +52,34 @@
 					person.normalisedTotal = normalisedTotal;
 					$('#total'+person.position).html(normalisedTotal);
 				}
+				drawPieChart();
+				saveStoreToWeb();
 			};
-			var saveToStore = function(data,successCallback,offlineFunc) {
+			var saveStoreToWeb = function(successCallback) {
 				successCallback = typeof successCallback === 'function' ? successCallback : function() {};
-				if(typeof offlineFunc === 'function') {
-					offlineFunc();
-					successCallback();
-				} else {
-					var callback = function(response) {
-						if(response.indexOf("added successfully")!==-1) { // this is from appjet
-							$('#nameList .ajax').remove();
-							successCallback();
-						} else {
-							$('#nameList .ajax').addClass('error').html('Not saved to server! Try again.</div>');
-						}
-					};
-					$('#nameList').prepend('<div class="ajax">Saving...</div>');
-					// handle viewing over local file:/// uri
-					if(
-						window.Components &&
-						window.netscape &&
-						window.netscape.security &&
-						document.location.protocol.indexOf("http") == -1) {
-					window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+				var callback = function(response) {
+					if(response.indexOf("added successfully")!==-1) { // this is from appjet
+						$('#nameList .ajax').remove();
+						successCallback();
+					} else {
+						$('#nameList .ajax').addClass('error').html('Not saved to server! Try again.</div>');
 					}
-					$.post("http://contributively.appjet.net",data,callback,"html");
+				};
+				$('#nameList').prepend('<div class="ajax">Saving...</div>');
+				// handle viewing over local file:/// uri
+				if(
+					window.Components &&
+					window.netscape &&
+					window.netscape.security &&
+					document.location.protocol.indexOf("http") == -1) {
+				window.netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
 				}
+				$.post("http://contributively.appjet.net",store,callback,"html");
 			};
 			$(document).ready(function() {
 				$('#nameForm .submit').click(function() {
 					var name = $('#name').val();
-					var addToTable = function() {
+					var addNameToTable = function() {
 						var table = $('#nameList tbody');
 						var people = $('#nameList tbody tr.person').length;
 						var htmlString = '<tr class="person"><td>'+name+'</td><td id="total'+(people+1)+'"></td></tr>';
@@ -73,16 +89,12 @@
 						}
 						table.prepend(htmlString);
 					};
-					var data = {
-						name:name
-					};
-					saveToStore(data,addToTable,function() {
-						// mimicing behaviour in contributively.appjet.net
-						store.push({
-							name:data.name,
-							position:store.length+1
-						});
+					store.push({
+						name:name,
+						position:store.length+1
 					});
+					addNameToTable();
+					saveStoreToWeb();
 					return false;
 				});
 				$('#nameList').change(function(ev) {
@@ -99,23 +111,18 @@
 							partnerInput.val(100-amount);
 						}
 					};
-					var data = {
-						position:position,
-						amount:amount,
-						partnerPosition:partnerPosition
-					};
-					saveToStore(data,updateInput,function() {
-						for(var i=0;i<store.length;i++) {
-							if(store[i].position===position) {
-								store[i]['amountWith'+partnerPosition] = amount;
-							} else if(store[i].position===partnerPosition) {
-								store[i]['amountWith'+position] = 100-amount;
-							}
+					for(var i=0;i<store.length;i++) {
+						if(store[i].position===position) {
+							store[i]['amountWith'+partnerPosition] = amount;
+						} else if(store[i].position===partnerPosition) {
+							store[i]['amountWith'+position] = 100-amount;
 						}
-					});
+					}
+					updateInput();
 					if(store.length>=2) {
 						calculateTotalsFromStore();
 					}
+					saveToStore();
 				});
 			});
 		</script>
@@ -139,6 +146,7 @@
 					</thead>
 					<tbody></tbody>
 				</table>
+				<div id="pieChart"></div>
 			</div>
 		</div>
 	</body>

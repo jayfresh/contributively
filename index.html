@@ -7,35 +7,37 @@
 		<script type="text/javascript" src="http://www.google.com/jsapi"></script>
 	    <script type="text/javascript">
 	      google.load("visualization", "1", {packages:["piechart"]});
-	      google.setOnLoadCallback(drawChart);
-	      function drawChart() {
+	      function drawPieChart() {
 	        var data = new google.visualization.DataTable();
 	        data.addColumn('string', 'Contribution');
 	        data.addColumn('number', 'Percentage');
 	        data.addRows(5);
 	        data.setValue(0, 0, 'Jon');
-	        data.setValue(0, 1, 11);
+	        data.setValue(0, 1, 3);
 	        data.setValue(1, 0, 'Josh');
 	        data.setValue(1, 1, 2);
 	        data.setValue(2, 0, 'Dan');
-	
+	        data.setValue(2, 1, 5);
 	        var chart = new google.visualization.PieChart(document.getElementById('pieChart'));
 	        chart.draw(data, {width: 400, height: 240, is3D: true, title: 'Contributions'});
 	      }
 	    </script>
 		<script type="text/javascript">
 			var store = [];
-			var calculateTotalsFromStore = function() {
-				var person = store[0];
+			var calculateTotalsForString = function(s) {
+				console.log(s);
+				var start = s.start;
+				var end = s.end;
+				var person = store[start];
 				var previousPerson;
 				var ratio;
-				var j;
+				var j = start+1;
 				var unNormalisedTotal;
-				// make everything relative to first person
-				var total = person['amountWith2'];
+				// make everything relative to person at start of string
+				var total = person['amountWith'+j];
 				person.unNormalisedTotal = total;
-				for(var i=1;i<store.length;i++) {
-					// only runs once there are two or more people
+				for(var i=j;i<end+1;i++) {
+					// only runs once there are two or more people in a string
 					previousPerson = person;
 					// should probably check that all browsers make array[0] the
 					// first element pushed in
@@ -46,14 +48,44 @@
 					total += unNormalisedTotal;
 				}
 				var normalisedTotal;
-				for(var i=0;i<store.length;i++) {
+				for(var i=start;i<end+1;i++) {
 					person = store[i];
 					normalisedTotal = person.unNormalisedTotal / total;
 					person.normalisedTotal = normalisedTotal;
 					$('#total'+person.position).html(normalisedTotal);
 				}
 				drawPieChart();
-				saveStoreToWeb();
+				/*saveStoreToWeb();*/
+			};
+			var calculateConnectedStrings = function() {
+				var connectedStrings = [];
+				var connectedString = {
+					start:0,
+					end:0
+				};
+				var j;
+				for(var i=0;i<store.length;i++) {
+					j=i+1;
+					if(store[i]['amountWith'+j]) {
+						connectedString.end = j;
+					} else {
+						if(connectedString.end) {
+							connectedStrings.push(connectedString);
+						}
+						connectedString = {
+							start:j,
+							end:null
+						};
+					}
+				}
+				return connectedStrings;
+			};
+			var calculateTotalsFromStore = function() {
+				var ss = calculateConnectedStrings();
+				$('#pieChart').html('');
+				for(var i=0;i<ss.length;i++) {
+					calculateTotalsForString(ss[i]);
+				}
 			};
 			var saveStoreToWeb = function(successCallback) {
 				successCallback = typeof successCallback === 'function' ? successCallback : function() {};
@@ -82,28 +114,31 @@
 					var addNameToTable = function() {
 						var table = $('#nameList tbody');
 						var people = $('#nameList tbody tr.person').length;
-						var htmlString = '<tr class="person"><td>'+name+'</td><td id="total'+(people+1)+'"></td></tr>';
+						var htmlString = '<tr class="person"><td>'+name+'</td><td id="total'+people+'"></td></tr>';
 						if(people!==0) {
-							var id = $('#nameList input').length+1;
+							var id = $('#nameList input').length;
 							htmlString += '<tr><td><input type="text" id="'+(id+1)+'" /></td><td></td></tr><tr><td><input type="text" id="'+id+'" /></td><td></td></tr>';
 						}
 						table.prepend(htmlString);
 					};
 					store.push({
 						name:name,
-						position:store.length+1
+						position:store.length
 					});
 					addNameToTable();
-					saveStoreToWeb();
+					/*saveStoreToWeb();*/
 					return false;
 				});
 				$('#nameList').change(function(ev) {
 					var target = ev.target;
 					var id = parseInt(target.id,10);
-					var partnerInputId = id%2===0 ? id-1 : id+1;
-					var position = Math.floor(id/2)+1;
-					var partnerPosition = Math.floor(partnerInputId/2)+1;
+					var partnerInputId = id%2===0 ? id+1 : id-1;
+					var position = Math.floor((id+1)/2);
+					var partnerPosition = Math.floor((partnerInputId+1)/2);
 					var amount = target.value;
+					if(target.value==='') {
+						amount = target.value = '0';
+					}
 					var updateInput = function() {
 						// check to see its only digits and less than or equal to 100
 						if(amount.match(/^\d+$/) && amount <= 100) {
@@ -122,7 +157,7 @@
 					if(store.length>=2) {
 						calculateTotalsFromStore();
 					}
-					saveToStore();
+					/*saveStoreToWeb();*/
 				});
 			});
 		</script>
